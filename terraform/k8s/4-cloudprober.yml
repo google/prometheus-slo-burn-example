@@ -1,0 +1,50 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  namespace: monitoring
+  name: cloudprober
+  labels:
+    app: cloudprober
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: cloudprober
+    spec:
+      containers:
+      - name: cloudprober
+        image: gcr.io/cre-prometheus-slo-alerting/cloudprober:latest
+        env:
+        - name: PORT
+          value: "8080"
+        - name: CLOUDPROBER_PORT
+          value: "8080"
+        ports:
+        - name: appport
+          containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: appport
+        readinessProbe:
+          httpGet:
+            path: /metrics
+            port: appport
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudprober
+  namespace: monitoring
+  labels:
+    app: cloudprober
+  annotations:
+    prometheus.io/scrape: 'true'
+spec:
+  type: NodePort
+  selector:
+    app: cloudprober
+  ports:
+  - port: 8080
+    targetPort: 8080

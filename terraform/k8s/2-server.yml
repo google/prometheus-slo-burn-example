@@ -1,0 +1,60 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: server
+  namespace: monitoring
+  labels:
+    app: server
+spec:
+  replicas: 10
+  template:
+    metadata:
+      labels:
+        app: server
+    spec:
+      containers:
+      - name: server
+        image: gcr.io/cre-prometheus-slo-alerting/example-server:latest
+        ports:
+        - name: appport
+          containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: appport
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: appport
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: server
+  namespace: monitoring
+  labels:
+    app: server
+  annotations:
+    prometheus.io/scrape: 'true'
+spec:
+  type: NodePort
+  selector:
+    app: server
+  ports:
+  - port: 8080
+    targetPort: 8080
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  namespace: monitoring
+  name: server
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: server-ip
+  labels:
+    app: server
+spec:
+  backend:
+    serviceName: server
+    servicePort: 8080

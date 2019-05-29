@@ -1,0 +1,8 @@
+groups:
+  - name: opencensus
+    rules:
+      - record: task:http_response_error_count
+        expr: opencensus_io_http_server_response_count_by_status_code{http_status=~"5[0-9]{2}"}
+
+      - record: task:http_response_total_count
+        expr: opencensus_io_http_server_response_count_by_status_code{http_status=~"[0-9]{3}"}
