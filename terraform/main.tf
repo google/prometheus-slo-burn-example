@@ -3,15 +3,16 @@ terraform {
 }
 
 provider "google" {
-  region = "${var.gcp_region}"
+  region = var.gcp_region
 }
 
-data "google_client_config" "current" {}
+data "google_client_config" "current" {
+}
 
 resource "google_container_cluster" "example-cluster" {
-  name               = "${var.cluster_name}"
+  name               = var.cluster_name
   description        = "prometheus example k8s cluster"
-  region             = "${var.gcp_region}"
+  region             = var.gcp_region
   initial_node_count = "1"
 
   logging_service    = "logging.googleapis.com/kubernetes"
@@ -27,9 +28,9 @@ resource "google_container_cluster" "example-cluster" {
 
 resource "google_container_node_pool" "pool0" {
   name       = "pool-0"
-  cluster    = "${google_container_cluster.example-cluster.name}"
+  cluster    = google_container_cluster.example-cluster.name
   node_count = 1
-  region     = "${var.gcp_region}"
+  region     = var.gcp_region
 
   autoscaling {
     min_node_count = 1
@@ -42,10 +43,10 @@ resource "google_container_node_pool" "pool0" {
   }
 
   node_config {
-    machine_type = "${var.machine_type}"
+    machine_type = var.machine_type
     preemptible  = "true"
 
-    metadata {
+    metadata = {
       disable-legacy-endpoints = "true"
     }
 
@@ -72,3 +73,4 @@ resource "google_compute_global_address" "grafana-ip" {
 resource "google_compute_global_address" "server-ip" {
   name = "server-ip"
 }
+
